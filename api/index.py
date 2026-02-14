@@ -4,25 +4,24 @@ import io
 
 app = Flask(__name__)
 
-# Vercel 需要這個來處理 CORS (如果前後端不同源)，
-# 但因為我們都在同一個 Vercel 專案下，通常不需要額外設定 CORS。
+# 增加一個根目錄路由，用來測試 Python 是否活著
+@app.route('/', methods=['GET'])
+def home():
+    return "Python API is running!", 200
 
+# 您的主功能
 @app.route('/api/speak', methods=['GET'])
 def speak():
     text = request.args.get('text', '')
     lang = request.args.get('lang', 'zh-TW')
     
-    # 簡單的錯誤處理
     if not text:
-        return "Missing text", 400
+        return "錯誤: 請輸入文字", 400
 
     try:
         # --- gTTS 邏輯 ---
-        # lang 參數對應: zh-TW, en, ja, vi (gTTS 都支援)
         tts = gTTS(text=text, lang=lang)
         
-        # 使用 BytesIO 在記憶體中處理檔案，不要寫入硬碟
-        # 因為 Vercel Serverless 環境是唯讀的 (除了 /tmp)
         fp = io.BytesIO()
         tts.write_to_fp(fp)
         fp.seek(0)
@@ -34,8 +33,11 @@ def speak():
             download_name="speech.mp3"
         )
     except Exception as e:
-        return str(e), 500
+        # ⚠️ 關鍵：把錯誤訊息回傳給前端，而不是只傳 500
+        return f"Server Error details: {str(e)}", 500
 
-# 為了讓 Vercel 能夠正確識別
+# 讓 Vercel 識別 application
+application = app
+
 if __name__ == '__main__':
     app.run(debug=True)
