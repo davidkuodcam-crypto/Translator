@@ -1,108 +1,33 @@
-<!DOCTYPE html>  
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TTS 語音引擎大對決</title>
     <style>
-        :root {
-            --primary: #2563eb;
-            --bg: #f8fafc;
-            --surface: #ffffff;
-            --text: #1e293b;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            display: flex;
-            justify-content: center;
-            padding: 2rem 1rem;
-            line-height: 1.5;
-        }
-        .container {
-            background: var(--surface);
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 600px;
-        }
+        :root { --primary: #2563eb; --bg: #f8fafc; --surface: #ffffff; --text: #1e293b; }
+        body { font-family: system-ui, sans-serif; background-color: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 2rem 1rem; line-height: 1.5; }
+        .container { background: var(--surface); padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 100%; max-width: 600px; }
         h1 { margin-top: 0; text-align: center; color: var(--primary); }
         .control-group { margin-bottom: 1.5rem; }
         label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
-        
-        select, textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 1rem;
-            box-sizing: border-box;
-        }
+        select, textarea { width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
         textarea { height: 120px; resize: vertical; }
-
-        .radio-group {
-            display: flex;
-            gap: 1rem;
-            background: #f1f5f9;
-            padding: 0.5rem;
-            border-radius: 8px;
-        }
-        .radio-option {
-            flex: 1;
-            text-align: center;
-        }
+        .radio-group { display: flex; gap: 1rem; background: #f1f5f9; padding: 0.5rem; border-radius: 8px; }
+        .radio-option { flex: 1; text-align: center; }
         .radio-option input { display: none; }
-        .radio-option label {
-            cursor: pointer;
-            padding: 0.5rem;
-            border-radius: 6px;
-            margin: 0;
-            display: block;
-            transition: all 0.2s;
-            font-weight: normal;
-        }
-        .radio-option input:checked + label {
-            background: var(--primary);
-            color: white;
-            font-weight: bold;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        button {
-            width: 100%;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 1rem;
-            font-size: 1.1rem;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        button:hover { opacity: 0.9; }
+        .radio-option label { cursor: pointer; padding: 0.5rem; border-radius: 6px; display: block; transition: all 0.2s; }
+        .radio-option input:checked + label { background: var(--primary); color: white; font-weight: bold; }
+        button { width: 100%; background-color: var(--primary); color: white; border: none; padding: 1rem; font-size: 1.1rem; border-radius: 8px; cursor: pointer; }
         button:disabled { background-color: #94a3b8; cursor: not-allowed; }
-
-        #status {
-            margin-top: 1rem;
-            text-align: center;
-            font-size: 0.9rem;
-            color: #64748b;
-            min-height: 1.5em;
-        }
-        .note {
-            font-size: 0.8rem;
-            color: #ef4444;
-            margin-top: 0.5rem;
-        }
+        #status { margin-top: 1rem; text-align: center; font-size: 0.9rem; color: #ef4444; white-space: pre-wrap; }
+        .note { font-size: 0.8rem; color: #ef4444; margin-top: 0.5rem; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🔊 TTS 語音引擎對決</h1>
+    <h1>🔊 TTS 語音引擎對決 (診斷版)</h1>
     
     <div class="control-group">
         <label>1. 選擇語言</label>
@@ -119,27 +44,23 @@
         <div class="radio-group">
             <div class="radio-option">
                 <input type="radio" id="engine-browser" name="engine" value="browser" checked>
-                <label for="engine-browser">瀏覽器內建<br><small>(快/機械音)</small></label>
+                <label for="engine-browser">瀏覽器內建<br><small>(快)</small></label>
             </div>
             <div class="radio-option">
                 <input type="radio" id="engine-server" name="engine" value="server">
-                <label for="engine-server">Google gTTS<br><small>(慢/自然音)</small></label>
+                <label for="engine-server">Google gTTS<br><small>(慢/API)</small></label>
             </div>
         </div>
-        <div id="browser-warning" class="note" style="display:none">
-            ⚠️ 注意：您的電腦可能沒有安裝越南語語音包，瀏覽器模式可能無法發聲。
-        </div>
+        <div id="browser-warning" class="note" style="display:none">⚠️ 注意：您的電腦可能不支援此語言。</div>
     </div>
 
     <div class="control-group">
         <label>3. 輸入文字</label>
-        <textarea id="textInput" placeholder="請輸入您想測試的文字...">你好，今天天氣真不錯。</textarea>
+        <textarea id="textInput">你好，今天天氣真不錯。</textarea>
     </div>
 
     <button id="speakBtn" onclick="handleSpeak()">開始朗讀</button>
     <div id="status"></div>
-    
-    <!-- 隱藏的播放器，給 gTTS 用 -->
     <audio id="audioPlayer" style="display:none"></audio>
 </div>
 
@@ -148,40 +69,28 @@
     const statusDiv = document.getElementById('status');
     const speakBtn = document.getElementById('speakBtn');
     const langSelect = document.getElementById('langSelect');
-    const browserWarning = document.getElementById('browser-warning');
+    const warning = document.getElementById('browser-warning');
 
-    // 預設文字切換
     const defaultTexts = {
-        'zh-TW': '你好，今天天氣真不錯，我們來測試語音合成。',
-        'en': 'Hello, the weather is nice today. Let us test the speech synthesis.',
-        'ja': 'こんにちは、今日はいい天気ですね。音声合成のテストをしましょう。',
-        'vi': 'Xin chào, hôm nay thời tiết thật đẹp. Hãy cùng kiểm tra tổng hợp giọng nói.'
+        'zh-TW': '你好，今天天氣真不錯。', 'en': 'Hello, the weather is nice today.',
+        'ja': 'こんにちは、いい天気ですね。', 'vi': 'Xin chào, hôm nay thời tiết đẹp.'
     };
 
     langSelect.addEventListener('change', (e) => {
-        const lang = e.target.value;
-        document.getElementById('textInput').value = defaultTexts[lang];
-        
-        // 檢查瀏覽器是否支援該語言 (簡單檢查)
-        if (lang === 'vi') {
-            browserWarning.style.display = 'block';
-        } else {
-            browserWarning.style.display = 'none';
-        }
+        document.getElementById('textInput').value = defaultTexts[e.target.value];
+        warning.style.display = (e.target.value === 'vi') ? 'block' : 'none';
     });
 
     async function handleSpeak() {
         const text = document.getElementById('textInput').value;
-        const lang = document.getElementById('langSelect').value;
+        const lang = langSelect.value;
         const engine = document.querySelector('input[name="engine"]:checked').value;
 
-        if (!text) {
-            statusDiv.innerText = "請先輸入文字！";
-            return;
-        }
+        if (!text) return alert("請輸入文字");
 
         speakBtn.disabled = true;
-        statusDiv.innerText = "準備中...";
+        statusDiv.innerText = "處理中...";
+        statusDiv.style.color = "#64748b";
 
         if (engine === 'browser') {
             speakWithBrowser(text, lang);
@@ -190,70 +99,51 @@
         }
     }
 
-    // --- 引擎 1: 瀏覽器內建 Web Speech API ---
     function speakWithBrowser(text, lang) {
-        // 停止之前的發音
         synth.cancel();
-
         const utterance = new SpeechSynthesisUtterance(text);
-        
-        // 設定語言代碼 (瀏覽器通常需要標準 BCP 47 tag)
-        let browserLang = lang;
-        if (lang === 'en') browserLang = 'en-US';
-        if (lang === 'ja') browserLang = 'ja-JP';
-        if (lang === 'vi') browserLang = 'vi-VN';
-        
-        utterance.lang = browserLang;
-        utterance.rate = 1.0; // 語速
-
-        utterance.onstart = () => { statusDiv.innerText = "🔊 瀏覽器正在朗讀..."; };
-        utterance.onend = () => { 
-            statusDiv.innerText = "✅ 朗讀結束"; 
-            speakBtn.disabled = false;
-        };
-        utterance.onerror = (e) => {
-            console.error(e);
-            statusDiv.innerText = "❌ 瀏覽器發音失敗 (可能不支援此語言)";
-            speakBtn.disabled = false;
-        };
-
+        utterance.lang = (lang === 'en') ? 'en-US' : (lang === 'ja' ? 'ja-JP' : (lang === 'vi' ? 'vi-VN' : lang));
+        utterance.onend = () => { statusDiv.innerText = "✅ 朗讀結束"; speakBtn.disabled = false; };
+        utterance.onerror = (e) => { console.error(e); statusDiv.innerText = "❌ 瀏覽器錯誤"; speakBtn.disabled = false; };
         synth.speak(utterance);
     }
 
-    // --- 引擎 2: Server 端 gTTS (Vercel Python) ---
+    // --- 關鍵修改：顯示詳細錯誤 ---
     async function speakWithServer(text, lang) {
-        statusDiv.innerText = "⏳ 正在呼叫 Google 翻譯引擎 (Vercel)...";
+        statusDiv.innerText = "⏳ 呼叫 Vercel API...";
         const player = document.getElementById('audioPlayer');
 
         try {
-            // 呼叫後端 API
             const response = await fetch(`/api/speak?text=${encodeURIComponent(text)}&lang=${lang}`);
             
-            if (!response.ok) throw new Error("API 請求失敗");
+            // 如果失敗 (例如 500 或 404)，讀取伺服器回傳的文字
+            if (!response.ok) {
+                const errorText = await response.text(); 
+                // 可能是 HTML (404頁面) 或 純文字 (Python exception)
+                if (errorText.includes("<!DOCTYPE html>")) {
+                    throw new Error(`路徑錯誤 (${response.status}) - 請檢查 vercel.json`);
+                } else {
+                    throw new Error(`API 錯誤 (${response.status}): ${errorText}`);
+                }
+            }
 
             const blob = await response.blob();
-            const url = URL.createObjectURL(blob);
-            
-            player.src = url;
+            player.src = URL.createObjectURL(blob);
             player.style.display = 'block';
-            
-            statusDiv.innerText = "🔊 gTTS 正在播放...";
             await player.play();
+            statusDiv.innerText = "✅ 播放成功 (gTTS)";
+            statusDiv.style.color = "green";
             
-            player.onended = () => {
-                statusDiv.innerText = "✅ 播放結束";
-                speakBtn.disabled = false;
-            };
+            player.onended = () => speakBtn.disabled = false;
 
         } catch (error) {
             console.error(error);
-            statusDiv.innerText = "❌ 伺服器錯誤 (可能是 Vercel 連線逾時)";
+            // 把錯誤顯示在畫面上
+            statusDiv.innerText = `❌ 發生錯誤:\n${error.message}`;
+            statusDiv.style.color = "red";
             speakBtn.disabled = false;
         }
     }
 </script>
-
 </body>
 </html>
-
-
