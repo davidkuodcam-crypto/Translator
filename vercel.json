@@ -1,11 +1,8 @@
 {
-  "functions": {
-    "api/*.py": {
-      "runtime": "python3.9"
+  "rewrites": [
+    {
+      "source": "/api/speak",
+      "destination": "/api/index.py"
     }
-  },
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/index.py" },
-    { "src": "/(.*)", "dest": "/$1" }
   ]
 }
