@@ -22,6 +22,11 @@
         button:disabled { background-color: #94a3b8; cursor: not-allowed; }
         #status { margin-top: 1rem; text-align: center; font-size: 0.9rem; color: #ef4444; white-space: pre-wrap; word-break: break-all; }
         .note { font-size: 0.8rem; color: #ef4444; margin-top: 0.5rem; }
+        
+        /* 新增：滑桿樣式 */
+        .range-container { display: flex; align-items: center; gap: 10px; }
+        input[type="range"] { flex: 1; cursor: pointer; }
+        .range-value { font-weight: bold; color: var(--primary); min-width: 30px; }
     </style>
 </head>
 <body>
@@ -54,8 +59,19 @@
         <div id="browser-warning" class="note" style="display:none">⚠️ 注意：您的電腦可能不支援此語言。</div>
     </div>
 
+    <!-- 新增語速調整區塊 -->
+    <div class="control-group" id="rateControlGroup">
+        <label>3. 語速調整 (僅瀏覽器模式)</label>
+        <div class="range-container">
+            <span>慢</span>
+            <input type="range" id="rateRange" min="0.5" max="2.0" step="0.1" value="1.0">
+            <span>快</span>
+            <span class="range-value" id="rateValue">1.0</span>
+        </div>
+    </div>
+
     <div class="control-group">
-        <label>3. 輸入文字</label>
+        <label>4. 輸入文字</label>
         <textarea id="textInput">你好，今天天氣真不錯。</textarea>
     </div>
 
@@ -70,6 +86,30 @@
     const speakBtn = document.getElementById('speakBtn');
     const langSelect = document.getElementById('langSelect');
     const warning = document.getElementById('browser-warning');
+    
+    // 新增：語速相關元件
+    const rateRange = document.getElementById('rateRange');
+    const rateValue = document.getElementById('rateValue');
+    const rateGroup = document.getElementById('rateControlGroup');
+    const engineRadios = document.querySelectorAll('input[name="engine"]');
+
+    // 顯示滑桿數值
+    rateRange.addEventListener('input', (e) => {
+        rateValue.innerText = e.target.value;
+    });
+
+    // 切換引擎時，隱藏或顯示語速控制 (因為 gTTS API 預設較難調整細微語速)
+    engineRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.value === 'browser') {
+                rateGroup.style.opacity = '1';
+                rateGroup.style.pointerEvents = 'auto';
+            } else {
+                rateGroup.style.opacity = '0.4'; // 變淡表示停用
+                rateGroup.style.pointerEvents = 'none'; // 禁止點擊
+            }
+        });
+    });
 
     const defaultTexts = {
         'zh-TW': '你好，今天天氣真不錯。', 'en': 'Hello, the weather is nice today.',
@@ -103,12 +143,15 @@
         synth.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = (lang === 'en') ? 'en-US' : (lang === 'ja' ? 'ja-JP' : (lang === 'vi' ? 'vi-VN' : lang));
+        
+        // 設定語速 (0.1 ~ 10, 預設 1)
+        utterance.rate = parseFloat(rateRange.value);
+
         utterance.onend = () => { statusDiv.innerText = "✅ 朗讀結束"; speakBtn.disabled = false; };
         utterance.onerror = (e) => { console.error(e); statusDiv.innerText = "❌ 瀏覽器錯誤"; speakBtn.disabled = false; };
         synth.speak(utterance);
     }
 
-    // --- 關鍵修改：顯示詳細錯誤 ---
     async function speakWithServer(text, lang) {
         statusDiv.innerText = "⏳ 呼叫 Vercel API...";
         const player = document.getElementById('audioPlayer');
@@ -116,10 +159,8 @@
         try {
             const response = await fetch(`/api/speak?text=${encodeURIComponent(text)}&lang=${lang}`);
             
-            // 如果失敗 (例如 500 或 404)，讀取伺服器回傳的文字
             if (!response.ok) {
                 const errorText = await response.text(); 
-                // 判斷是否為 404 頁面 HTML
                 if (errorText.includes("<!DOCTYPE html>")) {
                     throw new Error(`路徑錯誤 (${response.status}) - API 路徑找不到`);
                 } else {
@@ -138,7 +179,6 @@
 
         } catch (error) {
             console.error(error);
-            // 把錯誤顯示在畫面上，這才是我們需要的！
             statusDiv.innerText = `❌ 發生錯誤:\n${error.message}`;
             statusDiv.style.color = "red";
             speakBtn.disabled = false;
